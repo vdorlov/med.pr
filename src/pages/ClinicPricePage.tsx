@@ -1,6 +1,6 @@
 import React, { useState, useMemo, useEffect } from 'react';
-import { Link, useParams } from 'react-router-dom';
-import { ArrowLeft, Download } from 'lucide-react';
+import { Link, useParams, useSearchParams, useNavigate } from 'react-router-dom';
+import { ArrowLeft, Download, RefreshCw } from 'lucide-react';
 import ServiceTable from '../components/ServiceTable/ServiceTable';
 import ServiceTabs from '../components/ServiceTabs';
 import SectionFilter from '../components/SectionFilter/SectionFilter';
@@ -11,13 +11,31 @@ import { ServiceItem } from '../types';
 
 const ClinicPricePage: React.FC = () => {
   const { clinicId } = useParams<{ clinicId: string }>();
-  const [activeTab, setActiveTab] = useState<'outpatient-inpatient' | 'laboratory'>('outpatient-inpatient');
-  const [selectedSections, setSelectedSections] = useState<string[]>([]);
+  const [searchParams, setSearchParams] = useSearchParams();
+  const navigate = useNavigate();
+
+  // Получаем начальные значения из URL
+  const initialTab = searchParams.get('tab') as 'outpatient-inpatient' | 'laboratory' || 'outpatient-inpatient';
+  const initialSections = searchParams.get('sections')?.split(',').filter(Boolean) || [];
+
+  const [activeTab, setActiveTab] = useState<'outpatient-inpatient' | 'laboratory'>(initialTab);
+  const [selectedSections, setSelectedSections] = useState<string[]>(initialSections);
   const [isExportModalOpen, setIsExportModalOpen] = useState(false);
   const [isLoading, setIsLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
   const [ambulatoryServices, setAmbulatoryServices] = useState<ServiceItem[]>([]);
   const [laboratoryServices, setLaboratoryServices] = useState<ServiceItem[]>([]);
+  const [isCacheUpdating, setIsCacheUpdating] = useState(false);
+
+  // Обновляем URL при изменении фильтров
+  useEffect(() => {
+    const params = new URLSearchParams();
+    params.set('tab', activeTab);
+    if (selectedSections.length > 0) {
+      params.set('sections', selectedSections.join(','));
+    }
+    setSearchParams(params);
+  }, [activeTab, selectedSections, setSearchParams]);
 
   const clinic = clinics.find(c => c.id === clinicId);
 
@@ -28,8 +46,8 @@ const ClinicPricePage: React.FC = () => {
         setError(null);
 
         const [ambulatoryData, laboratoryData] = await Promise.all([
-          priceListService.getAmbulatoryStationaryServices(),
-          priceListService.getLaboratoryServices()
+          priceListService.getAmbulatoryStationaryServices(clinicId || ''),
+          priceListService.getLaboratoryServices(clinicId || '')
         ]);
 
         setAmbulatoryServices(ambulatoryData);
@@ -42,6 +60,14 @@ const ClinicPricePage: React.FC = () => {
     };
 
     loadInitialData();
+  }, [clinicId]);
+
+  useEffect(() => {
+    const unsubscribe = priceListService.subscribeToCacheUpdates((type) => {
+      setIsCacheUpdating(type === 'start');
+    });
+
+    return () => unsubscribe();
   }, []);
 
   const services = useMemo(() => {
@@ -133,6 +159,11 @@ const ClinicPricePage: React.FC = () => {
     });
   }, [services, selectedSections, sections]);
 
+  const handleTabChange = (tab: 'outpatient-inpatient' | 'laboratory') => {
+    setActiveTab(tab);
+    setSelectedSections([]); // Сбрасываем выбранные секции при смене таба
+  };
+
   const handleSelectSection = (sectionId: string) => {
     setSelectedSections(prev => {
       if (prev.includes(sectionId)) {
@@ -194,18 +225,26 @@ const ClinicPricePage: React.FC = () => {
             </p>
           </div>
 
-          <button
-            onClick={() => setIsExportModalOpen(true)}
-            className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
-          >
-            <Download size={16} />
-            <span>Выгрузить прейскурант</span>
-          </button>
+          <div className="flex items-center gap-4">
+            {isCacheUpdating && (
+              <div className="flex items-center text-gray-600">
+                <RefreshCw className="w-4 h-4 mr-2 animate-spin" />
+                <span className="text-sm">Обновление данных...</span>
+              </div>
+            )}
+            <button
+              onClick={() => setIsExportModalOpen(true)}
+              className="flex items-center gap-2 px-4 py-2 bg-blue-600 text-white rounded-md hover:bg-blue-700 transition-colors"
+            >
+              <Download size={16} />
+              <span>Выгрузить прейскурант</span>
+            </button>
+          </div>
         </div>
       </div>
 
       <div className="flex items-center justify-between mb-6">
-        <ServiceTabs activeTab={activeTab} onTabChange={setActiveTab} />
+        <ServiceTabs activeTab={activeTab} onTabChange={handleTabChange} />
         <div className="text-sm text-gray-600">
           Всего услуг: {services.length}
         </div>
@@ -248,7 +287,10 @@ const ClinicPricePage: React.FC = () => {
       <ExportModal
         isOpen={isExportModalOpen}
         onClose={() => setIsExportModalOpen(false)}
-        onExport={handleExport}
+        ambulatoryData={activeTab === 'outpatient-inpatient' ? filteredServices : ambulatoryServices}
+        laboratoryData={activeTab === 'laboratory' ? filteredServices : laboratoryServices}
+        selectedSections={selectedSections}
+        activeTab={activeTab}
       />
     </div>
   );

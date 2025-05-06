@@ -53,46 +53,82 @@ const ServiceTable: React.FC<ServiceTableProps> = ({ data, filteredData, onClear
   };
 
   const filteredAndSortedData = useMemo(() => {
-    let result = [...filteredData];
+    // Создаем индекс для быстрого поиска
+    const searchIndex = new Map<string, Set<string>>();
 
-    // Apply global filter
+    // Функция для добавления значения в индекс
+    const addToIndex = (key: string, value: string) => {
+      const normalizedValue = value.toLowerCase();
+      if (!searchIndex.has(normalizedValue)) {
+        searchIndex.set(normalizedValue, new Set());
+      }
+      searchIndex.get(normalizedValue)?.add(key);
+    };
+
+    // Создаем поисковый индекс для всех данных
+    filteredData.forEach((item, index) => {
+      const key = index.toString();
+      Object.values(item).forEach(value => {
+        if (value) {
+          addToIndex(key, String(value));
+        }
+      });
+    });
+
+    // Применяем глобальный фильтр
+    let resultIndexes = new Set<string>();
     if (globalFilter) {
       const searchTerm = globalFilter.toLowerCase();
-      result = result.filter(item =>
-        Object.values(item).some(value =>
-          String(value).toLowerCase().includes(searchTerm)
-        )
-      );
+      searchIndex.forEach((indexes, value) => {
+        if (value.includes(searchTerm)) {
+          indexes.forEach(index => resultIndexes.add(index));
+        }
+      });
+    } else {
+      // Если нет глобального фильтра, включаем все индексы
+      filteredData.forEach((_, index) => resultIndexes.add(index.toString()));
     }
 
-    // Apply column filters
+    // Применяем фильтры по колонкам
     Object.entries(filters).forEach(([key, value]) => {
       if (value) {
         const searchTerm = value.toLowerCase();
-        result = result.filter(item =>
-          String(item[key as keyof ServiceItem]).toLowerCase().includes(searchTerm)
-        );
+        const newIndexes = new Set<string>();
+
+        resultIndexes.forEach(index => {
+          const item = filteredData[parseInt(index)];
+          const fieldValue = String(item[key as keyof ServiceItem]).toLowerCase();
+          if (fieldValue.includes(searchTerm)) {
+            newIndexes.add(index);
+          }
+        });
+
+        resultIndexes = newIndexes;
       }
     });
 
-    // Apply sorting
-    return result.sort((a, b) => {
-      let compareA: string | number = a[sortField];
-      let compareB: string | number = b[sortField];
+    // Получаем отфильтрованные данные
+    let result = Array.from(resultIndexes).map(index => filteredData[parseInt(index)]);
+
+    // Применяем сортировку
+    result.sort((a, b) => {
+      const compareA = a[sortField];
+      const compareB = b[sortField];
 
       if (typeof compareA === 'string' && typeof compareB === 'string') {
-        compareA = compareA.toLowerCase();
-        compareB = compareB.toLowerCase();
+        return (sortDirection === 'asc' ? 1 : -1) * compareA.localeCompare(compareB, 'ru');
       }
 
-      if (compareA < compareB) return sortDirection === 'asc' ? -1 : 1;
-      if (compareA > compareB) return sortDirection === 'asc' ? 1 : -1;
-      return 0;
+      const numA = Number(compareA);
+      const numB = Number(compareB);
+      return (sortDirection === 'asc' ? 1 : -1) * (numA - numB);
     });
+
+    return result;
   }, [filteredData, filters, globalFilter, sortField, sortDirection]);
 
   return (
-    <div className="bg-white rounded-lg shadow overflow-hidden">
+    <div className="bg-white rounded-lg shadow">
       <div className="p-4 bg-gray-50 border-b border-gray-200">
         <div className="flex flex-wrap items-center gap-4">
           <div className="flex-grow">
@@ -124,131 +160,138 @@ const ServiceTable: React.FC<ServiceTableProps> = ({ data, filteredData, onClear
         </div>
       </div>
 
-      <div className="overflow-x-auto w-full">
-        <table className="w-full table-fixed divide-y divide-gray-300">
-          <thead>
-            <tr className="bg-gray-100">
-              <th className="sticky top-0 px-4 py-3 text-left text-sm font-semibold text-gray-900 uppercase tracking-wider w-[12%] border-b-2 border-r border-gray-300">
-                <div className="flex flex-col gap-2">
-                  <button
-                    className="flex items-center justify-between hover:text-blue-600 transition-colors"
-                    onClick={() => handleSort('section')}
-                  >
-                    <span className="text-xs">Раздел</span>
-                    <ArrowUpDown size={16} className={sortField === 'section' ? 'text-blue-600' : ''} />
-                  </button>
-                  <ColumnFilter
-                    column="section"
-                    value={filters.section}
-                    onChange={handleFilterChange}
-                    placeholder="Фильтр..."
-                  />
+      <div className="relative">
+        <div className="sticky top-0 z-10 bg-gray-100">
+          <div className="flex border-b-2 border-gray-300">
+            <div className="px-3 py-2 w-[15%] border-r border-gray-300">
+              <div className="flex flex-col gap-1">
+                <button
+                  className="flex items-center justify-between hover:text-blue-600 transition-colors"
+                  onClick={() => handleSort('section')}
+                >
+                  <span className="text-[11px] font-medium">Раздел</span>
+                  <ArrowUpDown size={14} className={sortField === 'section' ? 'text-blue-600' : ''} />
+                </button>
+                <ColumnFilter
+                  column="section"
+                  value={filters.section}
+                  onChange={handleFilterChange}
+                  placeholder="Фильтр..."
+                />
+              </div>
+            </div>
+            <div className="px-3 py-2 w-[15%] border-r border-gray-300">
+              <div className="flex flex-col gap-1">
+                <button
+                  className="flex items-center justify-between hover:text-blue-600 transition-colors"
+                  onClick={() => handleSort('subsection1')}
+                >
+                  <span className="text-[11px] font-medium">Подраздел 1</span>
+                  <ArrowUpDown size={14} className={sortField === 'subsection1' ? 'text-blue-600' : ''} />
+                </button>
+                <ColumnFilter
+                  column="subsection1"
+                  value={filters.subsection1}
+                  onChange={handleFilterChange}
+                  placeholder="Фильтр..."
+                />
+              </div>
+            </div>
+            <div className="px-3 py-2 w-[15%] border-r border-gray-300">
+              <div className="flex flex-col gap-1">
+                <button
+                  className="flex items-center justify-between hover:text-blue-600 transition-colors"
+                  onClick={() => handleSort('subsection2')}
+                >
+                  <span className="text-[11px] font-medium">Подраздел 2</span>
+                  <ArrowUpDown size={14} className={sortField === 'subsection2' ? 'text-blue-600' : ''} />
+                </button>
+                <ColumnFilter
+                  column="subsection2"
+                  value={filters.subsection2}
+                  onChange={handleFilterChange}
+                  placeholder="Фильтр..."
+                />
+              </div>
+            </div>
+            <div className="px-3 py-2 w-[14%] border-r border-gray-300">
+              <div className="flex flex-col gap-1">
+                <button
+                  className="flex items-center justify-between hover:text-blue-600 transition-colors"
+                  onClick={() => handleSort('codeEru')}
+                >
+                  <span className="text-[11px] font-medium">Код ЕРУ</span>
+                  <ArrowUpDown size={14} className={sortField === 'codeEru' ? 'text-blue-600' : ''} />
+                </button>
+                <ColumnFilter
+                  column="codeEru"
+                  value={filters.codeEru}
+                  onChange={handleFilterChange}
+                  placeholder="Фильтр..."
+                />
+              </div>
+            </div>
+            <div className="px-3 py-2 w-[31%] border-r border-gray-300">
+              <div className="flex flex-col gap-1">
+                <button
+                  className="flex items-center justify-between hover:text-blue-600 transition-colors"
+                  onClick={() => handleSort('nameEru')}
+                >
+                  <span className="text-[11px] font-medium">Наименование ЕРУ</span>
+                  <ArrowUpDown size={14} className={sortField === 'nameEru' ? 'text-blue-600' : ''} />
+                </button>
+                <ColumnFilter
+                  column="nameEru"
+                  value={filters.nameEru}
+                  onChange={handleFilterChange}
+                  placeholder="Фильтр..."
+                />
+              </div>
+            </div>
+            <div className="px-3 py-2 w-[10%]">
+              <div className="flex flex-col gap-1">
+                <button
+                  className="flex items-center justify-between hover:text-blue-600 transition-colors"
+                  onClick={() => handleSort('cost')}
+                >
+                  <span className="text-[11px] font-medium">Стоимость</span>
+                  <ArrowUpDown size={14} className={sortField === 'cost' ? 'text-blue-600' : ''} />
+                </button>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <div className="divide-y divide-gray-200">
+          {filteredAndSortedData.length > 0 ? (
+            filteredAndSortedData.map((item) => (
+              <div key={item.id} className="flex hover:bg-gray-50">
+                <div className="px-3 py-2 text-xs text-gray-900 w-[15%] border-r border-gray-300 break-words">
+                  {item.section}
                 </div>
-              </th>
-              <th className="sticky top-0 px-4 py-3 text-left text-sm font-semibold text-gray-900 uppercase tracking-wider w-[12%] border-b-2 border-r border-gray-300">
-                <div className="flex flex-col gap-2">
-                  <button
-                    className="flex items-center justify-between hover:text-blue-600 transition-colors"
-                    onClick={() => handleSort('subsection1')}
-                  >
-                    <span className="text-xs">Подраздел 1</span>
-                    <ArrowUpDown size={16} className={sortField === 'subsection1' ? 'text-blue-600' : ''} />
-                  </button>
-                  <ColumnFilter
-                    column="subsection1"
-                    value={filters.subsection1}
-                    onChange={handleFilterChange}
-                    placeholder="Фильтр..."
-                  />
+                <div className="px-3 py-2 text-xs text-gray-900 w-[15%] border-r border-gray-300 break-words">
+                  {item.subsection1}
                 </div>
-              </th>
-              <th className="sticky top-0 px-4 py-3 text-left text-sm font-semibold text-gray-900 uppercase tracking-wider w-[12%] border-b-2 border-r border-gray-300">
-                <div className="flex flex-col gap-2">
-                  <button
-                    className="flex items-center justify-between hover:text-blue-600 transition-colors"
-                    onClick={() => handleSort('subsection2')}
-                  >
-                    <span className="text-xs">Подраздел 2</span>
-                    <ArrowUpDown size={16} className={sortField === 'subsection2' ? 'text-blue-600' : ''} />
-                  </button>
-                  <ColumnFilter
-                    column="subsection2"
-                    value={filters.subsection2}
-                    onChange={handleFilterChange}
-                    placeholder="Фильтр..."
-                  />
+                <div className="px-3 py-2 text-xs text-gray-900 w-[15%] border-r border-gray-300 break-words">
+                  {item.subsection2}
                 </div>
-              </th>
-              <th className="sticky top-0 px-4 py-3 text-left text-sm font-semibold text-gray-900 uppercase tracking-wider w-[14%] border-b-2 border-r border-gray-300">
-                <div className="flex flex-col gap-2">
-                  <button
-                    className="flex items-center justify-between hover:text-blue-600 transition-colors"
-                    onClick={() => handleSort('codeEru')}
-                  >
-                    <span>Код ЕРУ</span>
-                    <ArrowUpDown size={16} className={sortField === 'codeEru' ? 'text-blue-600' : ''} />
-                  </button>
-                  <ColumnFilter
-                    column="codeEru"
-                    value={filters.codeEru}
-                    onChange={handleFilterChange}
-                    placeholder="Фильтр..."
-                  />
+                <div className="px-3 py-2 text-xs text-gray-900 w-[14%] border-r border-gray-300 font-mono whitespace-nowrap overflow-hidden text-ellipsis">
+                  {item.codeEru}
                 </div>
-              </th>
-              <th className="sticky top-0 px-4 py-3 text-left text-sm font-semibold text-gray-900 uppercase tracking-wider w-[40%] border-b-2 border-r border-gray-300">
-                <div className="flex flex-col gap-2">
-                  <button
-                    className="flex items-center justify-between hover:text-blue-600 transition-colors"
-                    onClick={() => handleSort('nameEru')}
-                  >
-                    <span>Наименование ЕРУ</span>
-                    <ArrowUpDown size={16} className={sortField === 'nameEru' ? 'text-blue-600' : ''} />
-                  </button>
-                  <ColumnFilter
-                    column="nameEru"
-                    value={filters.nameEru}
-                    onChange={handleFilterChange}
-                    placeholder="Фильтр..."
-                  />
+                <div className="px-3 py-2 text-xs text-gray-900 w-[31%] border-r border-gray-300 break-words">
+                  {item.nameEru}
                 </div>
-              </th>
-              <th className="sticky top-0 px-4 py-3 text-left text-sm font-semibold text-gray-900 uppercase tracking-wider w-[10%] border-b-2 border-gray-300">
-                <div className="flex flex-col gap-2">
-                  <button
-                    className="flex items-center justify-between hover:text-blue-600 transition-colors"
-                    onClick={() => handleSort('cost')}
-                  >
-                    <span>Стоимость</span>
-                    <ArrowUpDown size={16} className={sortField === 'cost' ? 'text-blue-600' : ''} />
-                  </button>
+                <div className="px-3 py-2 text-xs text-gray-900 w-[10%] text-right whitespace-nowrap">
+                  {item.cost.toLocaleString('ru')} ₽
                 </div>
-              </th>
-            </tr>
-          </thead>
-          <tbody className="bg-white divide-y divide-gray-200">
-            {filteredAndSortedData.length > 0 ? (
-              filteredAndSortedData.map((item) => (
-                <tr key={item.id} className="hover:bg-gray-50 transition-colors">
-                  <td className="px-4 py-3 text-[10px] text-gray-900 border-b border-r border-gray-200 whitespace-normal leading-tight">{item.section}</td>
-                  <td className="px-4 py-3 text-[10px] text-gray-900 border-b border-r border-gray-200 whitespace-normal leading-tight">{item.subsection1}</td>
-                  <td className="px-4 py-3 text-[10px] text-gray-900 border-b border-r border-gray-200 whitespace-normal leading-tight">{item.subsection2}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900 border-b border-r border-gray-200 font-mono">{item.codeEru}</td>
-                  <td className="px-4 py-3 text-sm text-gray-900 border-b border-r border-gray-200">{item.nameEru}</td>
-                  <td className="px-4 py-3 text-sm font-medium text-gray-900 border-b border-gray-200 text-right">
-                    {item.cost.toLocaleString('ru-RU')} ₽
-                  </td>
-                </tr>
-              ))
-            ) : (
-              <tr>
-                <td colSpan={6} className="px-4 py-6 text-center text-gray-500">
-                  Нет данных, соответствующих фильтрам
-                </td>
-              </tr>
-            )}
-          </tbody>
-        </table>
+              </div>
+            ))
+          ) : (
+            <div className="p-8 text-center text-gray-500">
+              Нет данных, соответствующих выбранным фильтрам
+            </div>
+          )}
+        </div>
       </div>
     </div>
   );
