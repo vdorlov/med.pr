@@ -6,6 +6,7 @@ import Heartbeat from '../components/Animations/Heartbeat';
 import { LogOut } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
+import { Link } from 'react-router-dom';
 
 const HomePage: React.FC = () => {
   const { signOut } = useAuth();
@@ -75,6 +76,45 @@ const HomePage: React.FC = () => {
             {clinics.map((clinic) => (
               <ClinicCard key={clinic.id} clinic={clinic} />
             ))}
+          </div>
+        </div>
+      </section>
+
+      {/* References */}
+      <section id="references" className="py-16 bg-gray-50">
+        <div className="container mx-auto px-4">
+          <h2 className="text-3xl font-bold text-center mb-12 text-gray-800">
+            Справочники
+          </h2>
+
+          <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
+            <Link
+              to="/reference/804n"
+              className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+            >
+              <div className="flex items-center space-x-4">
+                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
+                  <svg
+                    className="w-8 h-8 text-white"
+                    fill="none"
+                    stroke="currentColor"
+                    viewBox="0 0 24 24"
+                    xmlns="http://www.w3.org/2000/svg"
+                  >
+                    <path
+                      strokeLinecap="round"
+                      strokeLinejoin="round"
+                      strokeWidth={2}
+                      d="M4.5 12h15m-15 4h15m-7.5-8h7.5m-15 0h7.5"
+                    />
+                  </svg>
+                </div>
+                <div>
+                  <h2 className="text-xl font-semibold text-gray-900">Номенклатура медицинских услуг</h2>
+                  <p className="text-sm text-gray-600">Приказ 804н</p>
+                </div>
+              </div>
+            </Link>
           </div>
         </div>
       </section>

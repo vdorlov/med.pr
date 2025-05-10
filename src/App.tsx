@@ -5,6 +5,7 @@ import ProtectedRoute from './components/ProtectedRoute';
 import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import ClinicPricePage from './pages/ClinicPricePage';
+import NomenclaturePage from './pages/NomenclaturePage';
 
 const App: React.FC = () => {
   return (
@@ -25,6 +26,22 @@ const App: React.FC = () => {
             element={
               <ProtectedRoute>
                 <ClinicPricePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/price-list/:clinicId"
+            element={
+              <ProtectedRoute>
+                <ClinicPricePage />
+              </ProtectedRoute>
+            }
+          />
+          <Route
+            path="/reference/804n"
+            element={
+              <ProtectedRoute>
+                <NomenclaturePage />
               </ProtectedRoute>
             }
           />

@@ -83,20 +83,29 @@ export const priceListService = {
         notifyCacheUpdate('start');
 
         try {
-            const mappedData = await loadDataInChunks(
-                'ambulatory_stationary_services',
-                'section',
-                item => ({
-                    id: item.id.toString(),
-                    section: item.section,
-                    subsection1: item.subsection_1 || '',
-                    subsection2: item.subsection_2 || '',
-                    codeEru: item.kod_eru,
-                    nameEru: item.name_eru,
-                    cost: item.price,
-                    type: 'outpatient-inpatient' as const
-                })
-            );
+            const { data, error } = await supabase
+                .from('eru')
+                .select('*')
+                .not('price_hmm', 'is', null)
+                .neq('section', 'Технические услуги')
+                .order('section', { ascending: true });
+
+            if (error) {
+                console.error('Error fetching eru data:', error);
+                throw error;
+            }
+
+            const mappedData = data.map(item => ({
+                id: item.id.toString(),
+                section: item.section,
+                subsection1: item.subsection_1 || '',
+                subsection2: item.subsection_2 || '',
+                subsection3: '',
+                codeEru: item.kod_eru,
+                nameEru: item.name_eru,
+                cost: item.price_hmm,
+                type: 'outpatient-inpatient' as const
+            }));
 
             // Сохраняем в кэш
             cache.ambulatory.set(cacheKey, mappedData);
@@ -128,20 +137,28 @@ export const priceListService = {
         notifyCacheUpdate('start');
 
         try {
-            const mappedData = await loadDataInChunks(
-                'laboratory_services',
-                'section_lab',
-                item => ({
-                    id: item.id.toString(),
-                    section: item.section_lab,
-                    subsection1: item.subsection_1_lab || '',
-                    subsection2: item.subsection_2_lab || '',
-                    codeEru: item.kod_eru_lab,
-                    nameEru: item.name_eru_lab,
-                    cost: item.price_lab,
-                    type: 'laboratory' as const
-                })
-            );
+            const { data, error } = await supabase
+                .from('erlu')
+                .select('*')
+                .not('price_hmm', 'is', null)
+                .order('section_lab', { ascending: true });
+
+            if (error) {
+                console.error('Error fetching erlu data:', error);
+                throw error;
+            }
+
+            const mappedData = data.map(item => ({
+                id: item.id.toString(),
+                section: item.section_lab,
+                subsection1: item.subsection_1_lab || '',
+                subsection2: item.subsection_2_lab || '',
+                subsection3: item.subsection_3_lab || '',
+                codeEru: item.kod_eru_lab,
+                nameEru: item.name_eru_lab,
+                cost: item.price_hmm,
+                type: 'laboratory' as const
+            }));
 
             // Сохраняем в кэш
             cache.laboratory.set(cacheKey, mappedData);

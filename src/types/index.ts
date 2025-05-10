@@ -11,6 +11,7 @@ export type ServiceItem = {
   section: string;
   subsection1: string;
   subsection2: string;
+  subsection3: string;
   codeEru: string;
   nameEru: string;
   cost: number;
