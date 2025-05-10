@@ -224,8 +224,16 @@ const NomenclatureTable: React.FC<NomenclatureTableProps> = React.memo(({ data, 
                                     <div className="px-3 py-2 text-[10px] text-gray-900 w-[10%] border-r border-gray-300 break-words">
                                         {item.section}
                                     </div>
-                                    <div className="px-3 py-2 text-[10px] text-gray-900 w-[15%] border-r border-gray-300 break-words">
-                                        {item.serviceType}
+                                    <div
+                                        className="px-3 py-2 text-[10px] text-gray-900 w-[15%] border-r border-gray-300 break-words relative group"
+                                        title={item.serviceType}
+                                    >
+                                        <div className="truncate">
+                                            {item.serviceType}
+                                        </div>
+                                        <div className="absolute left-0 top-full z-10 hidden group-hover:block bg-gray-900 text-white text-xs rounded px-2 py-1 max-w-[300px] break-words">
+                                            {item.serviceType}
+                                        </div>
                                     </div>
                                     <div className="px-3 py-2 text-[10px] text-gray-900 w-[15%] border-r border-gray-300 break-words">
                                         {item.serviceClass}
