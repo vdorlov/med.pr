@@ -3,7 +3,7 @@ import { clinics } from '../data/clinics';
 import ClinicCard from '../components/ClinicCard';
 import MedicalCross from '../components/Animations/MedicalCross';
 import Heartbeat from '../components/Animations/Heartbeat';
-import { LogOut } from 'lucide-react';
+import { LogOut, ClipboardList, Microscope, Stethoscope } from 'lucide-react';
 import { useAuth } from '../contexts/AuthContext';
 import { useNavigate } from 'react-router-dom';
 import { Link } from 'react-router-dom';
@@ -92,9 +92,14 @@ const HomePage: React.FC = () => {
               to="/nomenclature"
               className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Номенклатура медицинских услуг
-              </h2>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <ClipboardList className="w-8 h-8 text-blue-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Номенклатура медицинских услуг
+                </h2>
+              </div>
               <p className="text-gray-600">
                 Приказ Минздрава России от 13.10.2017 N 804н
               </p>
@@ -104,11 +109,33 @@ const HomePage: React.FC = () => {
               to="/eru"
               className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
             >
-              <h2 className="text-xl font-semibold text-gray-900 mb-2">
-                Единый реестр услуг (ЕРУ)
-              </h2>
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <Stethoscope className="w-8 h-8 text-blue-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Единый реестр услуг (ЕРУ)
+                </h2>
+              </div>
               <p className="text-gray-600">
                 Справочник медицинских услуг
+              </p>
+            </Link>
+
+            <Link
+              to="/erlu"
+              className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
+            >
+              <div className="flex items-center gap-4 mb-4">
+                <div className="p-2 bg-blue-50 rounded-lg">
+                  <Microscope className="w-8 h-8 text-blue-600" />
+                </div>
+                <h2 className="text-xl font-semibold text-gray-900">
+                  Единый реестр лабораторных услуг (ЕРЛУ)
+                </h2>
+              </div>
+              <p className="text-gray-600">
+                Справочник лабораторных услуг
               </p>
             </Link>
           </div>
