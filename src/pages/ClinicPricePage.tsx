@@ -67,7 +67,9 @@ const ClinicPricePage: React.FC = () => {
       setIsCacheUpdating(type === 'start');
     });
 
-    return () => unsubscribe();
+    return () => {
+      unsubscribe();
+    };
   }, []);
 
   const services = useMemo(() => {
@@ -279,6 +281,7 @@ const ClinicPricePage: React.FC = () => {
               data={services}
               filteredData={filteredServices}
               onClearAllFilters={handleClearAllFilters}
+              type={activeTab}
             />
           </>
         )}

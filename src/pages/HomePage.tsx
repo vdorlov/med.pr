@@ -89,31 +89,27 @@ const HomePage: React.FC = () => {
 
           <div className="grid sm:grid-cols-2 lg:grid-cols-4 gap-6">
             <Link
-              to="/reference/804n"
-              className="block p-6 bg-white rounded-lg shadow-md hover:shadow-lg transition-shadow"
+              to="/nomenclature"
+              className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
             >
-              <div className="flex items-center space-x-4">
-                <div className="w-16 h-16 bg-gradient-to-br from-blue-500 to-blue-700 rounded-lg flex items-center justify-center">
-                  <svg
-                    className="w-8 h-8 text-white"
-                    fill="none"
-                    stroke="currentColor"
-                    viewBox="0 0 24 24"
-                    xmlns="http://www.w3.org/2000/svg"
-                  >
-                    <path
-                      strokeLinecap="round"
-                      strokeLinejoin="round"
-                      strokeWidth={2}
-                      d="M4.5 12h15m-15 4h15m-7.5-8h7.5m-15 0h7.5"
-                    />
-                  </svg>
-                </div>
-                <div>
-                  <h2 className="text-xl font-semibold text-gray-900">Номенклатура медицинских услуг</h2>
-                  <p className="text-sm text-gray-600">Приказ 804н</p>
-                </div>
-              </div>
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Номенклатура медицинских услуг
+              </h2>
+              <p className="text-gray-600">
+                Приказ Минздрава России от 13.10.2017 N 804н
+              </p>
+            </Link>
+
+            <Link
+              to="/eru"
+              className="block p-6 bg-white rounded-lg shadow hover:shadow-md transition-shadow"
+            >
+              <h2 className="text-xl font-semibold text-gray-900 mb-2">
+                Единый реестр услуг (ЕРУ)
+              </h2>
+              <p className="text-gray-600">
+                Справочник медицинских услуг
+              </p>
             </Link>
           </div>
         </div>

@@ -7,12 +7,13 @@ interface ServiceTableProps {
   data: ServiceItem[];
   filteredData: ServiceItem[];
   onClearAllFilters?: () => void;
+  type?: 'outpatient-inpatient' | 'laboratory';
 }
 
 type SortField = 'section' | 'subsection1' | 'subsection2' | 'subsection3' | 'codeEru' | 'nameEru' | 'cost';
 type SortDirection = 'asc' | 'desc';
 
-const ServiceTable: React.FC<ServiceTableProps> = ({ data, filteredData, onClearAllFilters }) => {
+const ServiceTable: React.FC<ServiceTableProps> = ({ data, filteredData, onClearAllFilters, type = 'outpatient-inpatient' }) => {
   const [filters, setFilters] = useState({
     section: '',
     subsection1: '',
@@ -186,23 +187,25 @@ const ServiceTable: React.FC<ServiceTableProps> = ({ data, filteredData, onClear
                   />
                 </div>
               </div>
-              <div className="px-3 py-2 w-[15%] border-r border-gray-300">
-                <div className="flex flex-col gap-1">
-                  <button
-                    className="flex items-center justify-between hover:text-blue-600 transition-colors"
-                    onClick={() => handleSort('subsection3')}
-                  >
-                    <span className="text-[11px] font-medium">Подраздел 3</span>
-                    <ArrowUpDown size={14} className={sortField === 'subsection3' ? 'text-blue-600' : ''} />
-                  </button>
-                  <ColumnFilter
-                    column="subsection3"
-                    value={filters.subsection3}
-                    onChange={handleFilterChange}
-                    placeholder="Фильтр..."
-                  />
+              {type === 'laboratory' && (
+                <div className="px-3 py-2 w-[15%] border-r border-gray-300">
+                  <div className="flex flex-col gap-1">
+                    <button
+                      className="flex items-center justify-between hover:text-blue-600 transition-colors"
+                      onClick={() => handleSort('subsection3')}
+                    >
+                      <span className="text-[11px] font-medium">Подраздел 3</span>
+                      <ArrowUpDown size={14} className={sortField === 'subsection3' ? 'text-blue-600' : ''} />
+                    </button>
+                    <ColumnFilter
+                      column="subsection3"
+                      value={filters.subsection3}
+                      onChange={handleFilterChange}
+                      placeholder="Фильтр..."
+                    />
+                  </div>
                 </div>
-              </div>
+              )}
               <div className="px-3 py-2 w-[14%] border-r border-gray-300">
                 <div className="flex flex-col gap-1">
                   <button
@@ -264,10 +267,12 @@ const ServiceTable: React.FC<ServiceTableProps> = ({ data, filteredData, onClear
                   <div className="px-3 py-2 text-xs text-gray-900 w-[15%] border-r border-gray-300 break-words">
                     {item.subsection2}
                   </div>
-                  <div className="px-3 py-2 text-xs text-gray-900 w-[15%] border-r border-gray-300 break-words">
-                    {item.subsection3}
-                  </div>
-                  <div className="px-3 py-2 text-xs text-gray-900 w-[14%] border-r border-gray-300 font-mono whitespace-nowrap overflow-hidden text-ellipsis">
+                  {type === 'laboratory' && (
+                    <div className="px-3 py-2 text-xs text-gray-900 w-[15%] border-r border-gray-300 break-words">
+                      {item.subsection3}
+                    </div>
+                  )}
+                  <div className="px-3 py-2 text-xs text-gray-900 w-[14%] border-r border-gray-300 font-mono break-words">
                     {item.codeEru}
                   </div>
                   <div className="px-3 py-2 text-xs text-gray-900 w-[31%] border-r border-gray-300 break-words">

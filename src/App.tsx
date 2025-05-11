@@ -6,6 +6,7 @@ import LoginPage from './pages/LoginPage';
 import HomePage from './pages/HomePage';
 import ClinicPricePage from './pages/ClinicPricePage';
 import NomenclaturePage from './pages/NomenclaturePage';
+import ERUPage from './pages/ERUPage';
 
 const App: React.FC = () => {
   return (
@@ -45,6 +46,8 @@ const App: React.FC = () => {
               </ProtectedRoute>
             }
           />
+          <Route path="/nomenclature" element={<NomenclaturePage />} />
+          <Route path="/eru" element={<ERUPage />} />
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </AuthProvider>
